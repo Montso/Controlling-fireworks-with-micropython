@@ -1,9 +1,9 @@
-
+# Controlling-fireworks-with-micropython
 
 ## How the code works
 ___
 line 1-4
-```
+```python
 from machine import Pin, I2C
 import ds1307
 from time import localtime, mktime, sleep
@@ -20,7 +20,7 @@ from Micropython docs:
 The `ds1307` is a library used to interface with RTC module. Find it [here.](https://github.com/mcauser/micropython-tinyrtc-i2c).
 ___
 line 6-20
-```
+```python
 #rtc i2c pins
 sda_pin = 26
 scl_pin = 27
@@ -37,12 +37,10 @@ rel2 = 19
 i2c = I2C(1, sda=Pin(sda_pin), scl=Pin(scl_pin))
 ds = ds1307.DS1307(i2c)
 ```
-<p>
 We create variables for our circuit configuration. And then initiate the I2C and create a ds1307 class.
-</p>
 ___
 line 22-33
-```
+```python
 #segments values for displaying numbers  
 num = {"-": (0,0,0,0,0,0,0),
        "0": (1,1,1,1,1,1,0),
@@ -59,7 +57,7 @@ num = {"-": (0,0,0,0,0,0,0),
 The tuples store the states (0=OFF, 1=ON) of the LED segments in order order to display each digit. *NB:* "-" is a blank character which keeps all segments off.
 ___
 line 35-48
-```
+```python
 Pin(rel1, mode=Pin.OUT, value=0)
 Pin(rel2, mode=Pin.OUT, value=0)
 
@@ -75,10 +73,12 @@ def init():
         Pin(digit).off()
 init()
 ```
+
 Relay pins begin as OFF. The `init()` function takes the display off. For the display to be off, the digit pins should be ON while the segments should be GND.
 ___
 line 50
-```
+
+```python
 deadline = (2022, 1, 2, 17, 41, 0, 0, 0)  #time to countdown to
 ```
 This value can be changed to a desired date and/or time. It is the target time for the countdown, and it is the 8-tuple time format used in micropython:
@@ -87,27 +87,27 @@ This value can be changed to a desired date and/or time. It is the target time f
 ...
 >The format of the entries in the 8-tuple are:
 >
-year includes the century (for example 2014).
+>year includes the century (for example 2014).
 >
-month is 1-12
+>month is 1-12
 >
-mday is 1-31
+>mday is 1-31
 >
-hour is 0-23
+>hour is 0-23
 >
-minute is 0-59
+>minute is 0-59
 >
-second is 0-59
+>second is 0-59
 >
-weekday is 0-6 for Mon-Sun
+>weekday is 0-6 for Mon-Sun
 >
-yearday is 1-366
+>yearday is 1-366
 
 ___
-**The subsequent code runs inside of a `while True` loop **
+***The subsequent code runs inside of a `while True` loop***
 ___
 line 54
-```
+```python
 current = localtime() #current = ds.datetime() for RTC
 
 #time difference between the two events/moments in seconds
@@ -119,7 +119,7 @@ When we pass the `deadline` or the `current` variables into `local.mktime()`, we
 Mathemetically, by subtracting time-since-epoch of both `deadline` and `current`, we get the time difference between `deadline` and `current`, hence time to go until its the `deadline`.
 ___
 line 59-62
-```
+```python
 #convert seconds to hours, minutes, seconds
 hours, minutes = divmod(diff,3600)
 minutes, seconds = divmod(minutes,60)
@@ -139,7 +139,7 @@ So how `divmod` works is that you pass two parameters, the dividend followed by 
 In this line `seconds = int(seconds)`, we take only the integer of the previous `seconds` variable, discarding everything behind the decimal point.
 ___
 line 63-67
-```
+```python
 #choosing between seconds countdown and HH:MM countdown
 if (hours == 0) and (minutes <=1):
     s = f"--{seconds:02d}" 
@@ -149,7 +149,7 @@ else:
 Before the countdown time goes below a minute, the time is displayed as hours and minutes (HHMM), and when it is under a minute, we display seconds (--SS).
 ___
 line 69-74
-```
+```python
 for digit in range(4):
     for seg in range(7):
         Pin(segments[seg], mode=Pin.OUT, value=num[str(s[digit])][seg])
@@ -157,8 +157,10 @@ for digit in range(4):
     sleep(0.001)
     Pin(digits[digit], mode=Pin.OUT, value=1)
 ```
-`for digit in range(4):`
-'`for seg in range(7):` 
+```python
+for digit in range(4):
+    for seg in range(7):
+```
 These loop through every segment of every digit.
 
 Let us break this `Pin(segments[seg], mode=Pin.OUT, value=num[str(s[digit])][seg])` down:
@@ -184,7 +186,7 @@ In this line `Pin(digits[digit], mode=Pin.OUT, value=0)`, `digits[digit]` indexe
 So these 3 lines `Pin(digits[digit], mode=Pin.OUT, value=0)`, ``sleep(0.001)`, and `Pin(digits[digit], mode=Pin.OUT, value=1)` control the display to show a single digit at a time, and then bring it off before showing another digit individually. The digits on the display appear as if they are all displayed simaltenously instead of individually. This is because thecycle of displaying the digits individually occurs very fast, it runs over each digit in 1 millisecond or 0.001 seconds.
 ___
 line 76-80
-```
+```python
 if s == "--00":
     Pin(rel1, mode=Pin.OUT, value=1)
     sleep(2)
